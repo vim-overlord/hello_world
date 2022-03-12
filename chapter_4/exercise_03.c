@@ -1,3 +1,6 @@
+/* Exercise 4-3. Given the basic framework, it’s straightforward to extend the
+    calculator. Add the modulus (%) operator and provisions for negative
+    numbers. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -22,7 +25,7 @@ int bufp = 0;       /* next free position in buf */
 main()
 {
     int type;
-    double op2;
+    double op1, op2;
     char s[MAXOP];
 
     while ((type = getop(s)) != EOF) {
@@ -45,6 +48,15 @@ main()
             if (op2 != 0.0)
                 push(pop() / op2);
             else
+                printf("error: zero divisor\n");
+            break;
+        case '%':
+            op2 = pop();
+            if (op2 != 0.0) {
+                for (op1 = pop(); op1 >= op2; op1 -= op2)
+                    ;
+                push(op1);
+            } else
                 printf("error: zero divisor\n");
             break;
         case '\n':
@@ -86,10 +98,10 @@ int getop(char s[])
     while ((s[0] = c = getch()) == ' ' || c == '\t')
         ;
     s[1] = '\0';
-    if (!isdigit(c) && c != '.')
+    if (!isdigit(c) && c != '.' && c != '+' && c != '-')
         return c;   /* not a number */
     i = 0;
-    if (isdigit(c)) /* collect integer part */
+    if (isdigit(c) || c == '+' || c == '-') /* collect integer part */
         while (isdigit(s[++i] = c = getch()))
             ;
     if (c == '.')   /* collect fraction part */
@@ -98,6 +110,8 @@ int getop(char s[])
     s[i] = '\0';
     if (c != EOF)
         ungetch(c);
+    if ((s[0] == '+' || s[0] == '-') && i == 1)
+        return s[0];    /* return operator if no digits afterwards */
     return NUMBER;
 }
 
