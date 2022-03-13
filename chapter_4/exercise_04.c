@@ -1,3 +1,6 @@
+/* Exercise 4-4. Add commands to print the top element of the stack without
+    popping, to duplicate it, and to swap the top two elements. Add a command
+    to clear the stack. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -10,6 +13,10 @@
 int getop(char []);
 void push(double);
 double pop(void);
+void print_val(void);
+void duplicate(void);
+void swap(void);
+void clear(void);
 int getch(void);
 void ungetch(int);
 
@@ -56,8 +63,21 @@ main()
             } else
                 printf("error: zero divisor\n");
             break;
+        case 'p':
+            print_val();
+            break;
+        case 'd':
+            duplicate();
+            break;
+        case 's':
+            swap();
+            break;
+        case 'c':
+            clear();
+            break;
         case '\n':
-            printf("\t%.8g\n", pop());
+            if (sp == 1)
+                printf("\t%.8g\n", pop());
             break;
         default:
             printf("error: unknown command %s\n", s);
@@ -110,6 +130,51 @@ int getop(char s[])
     if ((s[0] == '+' || s[0] == '-') && i == 1)
         return s[0];    /* return operator if no digits afterwards */
     return NUMBER;
+}
+
+/* print_val:  print top element of value stack */
+void print_val(void)
+{
+    if (sp > 0)
+        printf("\t%.8g\n", val[sp - 1]);
+    else
+        printf("error: stack empty\n");
+}
+
+/* duplicate:  duplicate top element of value stack */
+void duplicate(void)
+{
+    if (sp > MAXVAL - 1) {
+        printf("error: stack full, can't duplicate\n");
+        return;
+    } else if (sp <= 0) {
+        printf("error: stack empty\n");
+        return;
+    }
+    double temp = pop();
+
+    push(temp);
+    push(temp);
+}
+
+/* swap:  swap top two elements of value stack */
+void swap(void)
+{
+    if (sp <= 1) {
+        printf("swap: stack doesn't contain 2 elements\n");
+        return;
+    }
+    double num_1 = pop();
+    double num_2 = pop();
+
+    push(num_1);
+    push(num_2);
+}
+
+/* clear:  clear value stack */
+void clear(void)
+{
+    sp = 0;
 }
 
 int getch(void) /* get a (possibly pushed back) character */
