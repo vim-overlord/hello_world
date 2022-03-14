@@ -1,22 +1,24 @@
+/* Exercise 4-10. An alternate organization uses getline to read an entire
+    input line; this makes getch and ungetch unnecessary. Revise the calculator
+    to use this approach. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
 
-#define MAXOP   100 /* max size of operand or operator */
-#define NUMBER  '0' /* signal that a number was found */
-#define MAXVAL  100 /* maximum depth of val stack */
-#define BUFSIZE 100
+#define MAXOP   100     /* max size of operand or operator */
+#define NUMBER  '0'     /* signal that a number was found */
+#define MAXVAL  100     /* maximum depth of val stack */
+#define MAXLINE 1000    /* maximum input line size */
 
 int getop(char []);
 void push(double);
 double pop(void);
-int getch(void);
-void ungetch(int);
+int my_getline(char s[], int lim);
 
 int sp = 0;         /* next free stack position */
 double val[MAXVAL]; /* value stack */
-char buf[BUFSIZE];  /* buffer for ungetch */
-int bufp = 0;       /* next free position in buf */
+char line[MAXLINE]; /* current input line */
+int lp = -1;        /* current position in line */
 
 /* reverse Polish calculator */
 main()
@@ -25,44 +27,45 @@ main()
     double op1, op2;
     char s[MAXOP];
 
-    while ((type = getop(s)) != EOF) {
-        switch (type) {
-        case NUMBER:
-            push(atof(s));
-            break;
-        case '+':
-            push(pop() + pop());
-            break;
-        case '*':
-            push(pop() * pop());
-            break;
-        case '-':
-            op2 = pop();
-            push(pop() - op2);
-            break;
-        case '/':
-            op2 = pop();
-            if (op2 != 0.0)
-                push(pop() / op2);
-            else
-                printf("error: zero divisor\n");
-            break;
-        case '%':
-            op2 = pop();
-            if (op2 != 0.0) {
-                for (op1 = pop(); op1 >= op2; op1 -= op2)
-                    ;
-                push(op1);
-            } else
-                printf("error: zero divisor\n");
-            break;
-        case '\n':
-            printf("\t%.8g\n", pop());
-            break;
-        default:
-            printf("error: unknown command %s\n", s);
-            break;
+    while (my_getline(line, MAXLINE) > 0) {
+        while ((type = getop(s)) != '\n') {
+            switch (type) {
+            case NUMBER:
+                push(atof(s));
+                break;
+            case '+':
+                push(pop() + pop());
+                break;
+            case '*':
+                push(pop() * pop());
+                break;
+            case '-':
+                op2 = pop();
+                push(pop() - op2);
+                break;
+            case '/':
+                op2 = pop();
+                if (op2 != 0.0)
+                    push(pop() / op2);
+                else
+                    printf("error: zero divisor\n");
+                break;
+            case '%':
+                op2 = pop();
+                if (op2 != 0.0) {
+                    for (op1 = pop(); op1 >= op2; op1 -= op2)
+                        ;
+                    push(op1);
+                } else
+                    printf("error: zero divisor\n");
+                break;
+            default:
+                printf("error: unknown command %s\n", s);
+                break;
+            }
         }
+        printf("\t%.8g\n", pop());
+        lp = -1;
     }
     return 0;
 }
@@ -90,37 +93,40 @@ double pop(void)
 /* getop:  get next operator or numeric operand */
 int getop(char s[])
 {
-    int i, c;
+    int i;
 
-    while ((s[0] = c = getch()) == ' ' || c == '\t')
+    while ((s[0] = line[++lp]) == ' ' || line[lp] == '\t')
         ;
     s[1] = '\0';
-    if (!isdigit(c) && c != '.' && c != '+' && c != '-')
-        return c;   /* not a number */
+    if (!isdigit(line[lp]) && line[lp] != '.' && line[lp] != '+' &&
+        line[lp] != '-')
+        return line[lp];    /* not a number */
     i = 0;
-    if (isdigit(c) || c == '+' || c == '-') /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
+    /* collect integer part */
+    if (isdigit(line[lp]) || line[lp] == '+' || line[lp] == '-')
+        while (isdigit(s[++i] = line[++lp]))
             ;
-    if (c == '.')   /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
+    if (line[lp] == '.') /* collect fraction part */
+        while (isdigit(s[++i] = line[++lp]))
             ;
     s[i] = '\0';
-    if (c != EOF)
-        ungetch(c);
+    if (line[lp] != EOF)
+        --lp;
     if ((s[0] == '+' || s[0] == '-') && i == 1)
         return s[0];    /* return operator if no digits afterwards */
     return NUMBER;
 }
 
-int getch(void) /* get a (possibly pushed back) character */
+/* getline:  get line into s, return length */
+int my_getline(char s[], int lim)
 {
-    return (bufp > 0) ? buf[--bufp] : getchar();
-}
+    int i, c;
 
-void ungetch(int c) /* push character back on input */
-{
-    if (bufp >= BUFSIZE)
-        printf("ungetch: too many characters\n");
-    else
-        buf[bufp++] = c;
+    i = 0;
+    while (--lim > 0 && (c=getchar()) != EOF && c != '\n')
+        s[i++] = c;
+    if (c == '\n')
+        s[i++] = c;
+    s[i] = '\0';
+    return i;
 }
