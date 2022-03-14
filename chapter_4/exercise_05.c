@@ -1,9 +1,14 @@
+/* Exercise 4-5. Add access to library functions like sin, exp, and pow. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
+#include <math.h>
 
 #define MAXOP   100 /* max size of operand or operator */
 #define NUMBER  '0' /* signal that a number was found */
+#define SIN     'S' /* signal that a sin function was found */
+#define EXP     'E' /* signal that a exp function was found */
+#define POW     'P' /* signal that a pow function was found */
 #define MAXVAL  100 /* maximum depth of val stack */
 #define BUFSIZE 100
 
@@ -16,6 +21,7 @@ void swap(void);
 void clear(void);
 int getch(void);
 void ungetch(int);
+int lookfor(char []);
 
 int sp = 0;         /* next free stack position */
 double val[MAXVAL]; /* value stack */
@@ -59,6 +65,16 @@ main()
                 push(op1);
             } else
                 printf("error: zero divisor\n");
+            break;
+        case SIN:
+            push(sin(pop()));
+            break;
+        case EXP:
+            push(exp(pop()));
+            break;
+        case POW:
+            op2 = pop();
+            push(pow(pop(), op2));
             break;
         case 'p':
             print_val();
@@ -112,8 +128,18 @@ int getop(char s[])
     while ((s[0] = c = getch()) == ' ' || c == '\t')
         ;
     s[1] = '\0';
-    if (!isdigit(c) && c != '.' && c != '+' && c != '-')
-        return c;   /* not a number */
+    if (!isdigit(c) && c != '.' && c != '+' && c != '-') {
+        switch (tolower(c)) {
+            case 's':
+                return (lookfor("in")) ? SIN : c;
+            case 'e':
+                return (lookfor("xp")) ? EXP : c;
+            case 'p':
+                return (lookfor("ow")) ? POW : c;
+            default:
+                return c;   /* not a number */
+        }
+    }
     i = 0;
     if (isdigit(c) || c == '+' || c == '-') /* collect integer part */
         while (isdigit(s[++i] = c = getch()))
@@ -185,4 +211,21 @@ void ungetch(int c) /* push character back on input */
         printf("ungetch: too many characters\n");
     else
         buf[bufp++] = c;
+}
+
+/* lookfor:  return 1 if specified string is found */
+int lookfor(char s[])
+{
+    int i, j;
+    char temp[MAXOP];
+
+    for (i = 0; s[i] != '\0' && (temp[i] = getch()) == s[i]; ++i)
+        ;
+    if (s[i] == '\0')   /* string was found */
+        return 1;
+    else {  /* unget read characters and return 0 */
+        for (j = 0; j <= i; ++j)
+            ungetch(temp[j]);
+        return 0;
+    }
 }
