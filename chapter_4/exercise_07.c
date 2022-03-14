@@ -1,3 +1,6 @@
+/* Exercise 4-7. Write a routine ungets(s) that will push back an entire string
+    onto the input. Should ungets know about buf and bufp, or should it just
+    use ungetch? */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -23,6 +26,7 @@ void setvar(int, double);
 double getval(int);
 int getch(void);
 void ungetch(int);
+void ungets(char []);
 int lookfor(char []);
 
 int sp = 0;         /* next free stack position */
@@ -260,19 +264,31 @@ void ungetch(int c) /* push character back on input */
         buf[bufp++] = c;
 }
 
+/* ungets:  push character string back on input */
+void ungets(char s[])
+{
+    int i;
+
+    for (i = 0; s[i] != '\0'; ++i)
+        ;
+    --i;    /* exclude \0 */
+    for (; i >= 0; --i)
+        ungetch(s[i]);
+}
+
 /* lookfor:  return 1 if specified string is found */
 int lookfor(char s[])
 {
-    int i, j;
+    int i;
     char temp[MAXOP];
 
     for (i = 0; s[i] != '\0' && (temp[i] = getch()) == s[i]; ++i)
         ;
     if (s[i] == '\0')   /* string was found */
         return 1;
-    else {  /* unget read characters and return 0 */
-        for (j = 0; j <= i; ++j)
-            ungetch(temp[j]);
+    else {  /* unget read string and return 0 */
+        temp[i + 1] = '\0';
+        ungets(temp);
         return 0;
     }
 }
