@@ -1,3 +1,6 @@
+/* Exercise 4-9. Our getch and ungetch do not handle a pushed-back EOF
+    correctly. Decide what their properties ought to be if an EOF is pushed
+    back, then implement your design. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -30,7 +33,7 @@ int sp = 0;         /* next free stack position */
 int ans = 0;        /* most recently printed value */
 double val[MAXVAL]; /* value stack */
 double var[26];     /* variable values */
-char buf[BUFSIZE];  /* buffer for ungetch */
+int buf[BUFSIZE];   /* buffer for ungetch */
 int bufp = 0;       /* next free position in buf */
 
 /* reverse Polish calculator */
