@@ -1,3 +1,5 @@
+/* Exercise 4-8. Suppose that there will never be more than one character of
+    pushback. Modify getch and ungetch accordingly. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -5,7 +7,8 @@
 #define MAXOP   100 /* max size of operand or operator */
 #define NUMBER  '0' /* signal that a number was found */
 #define MAXVAL  100 /* maximum depth of val stack */
-#define BUFSIZE 100
+
+enum boolean { EMPTY, FULL };
 
 int getop(char []);
 void push(double);
@@ -15,8 +18,8 @@ void ungetch(int);
 
 int sp = 0;         /* next free stack position */
 double val[MAXVAL]; /* value stack */
-char buf[BUFSIZE];  /* buffer for ungetch */
-int bufp = 0;       /* next free position in buf */
+char buf;           /* buffer for ungetch */
+int state = EMPTY;  /* whether buffer is full or empty */
 
 /* reverse Polish calculator */
 main()
@@ -114,13 +117,19 @@ int getop(char s[])
 
 int getch(void) /* get a (possibly pushed back) character */
 {
-    return (bufp > 0) ? buf[--bufp] : getchar();
+    if (state == FULL) {
+        state = EMPTY;
+        return buf;
+    }
+    return getchar();
 }
 
 void ungetch(int c) /* push character back on input */
 {
-    if (bufp >= BUFSIZE)
-        printf("ungetch: too many characters\n");
-    else
-        buf[bufp++] = c;
+    if (state == FULL)
+        printf("ungetch: buffer is full\n");
+    else {
+        buf = c;
+        state = FULL;
+    }
 }
