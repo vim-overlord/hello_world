@@ -1,3 +1,5 @@
+/* Exercise 4-11. Modify getop so that it doesn't need to use ungetch. Hint:
+    use an internal static variable. */
 #include <stdio.h>
 #include <stdlib.h> /* for atof() */
 #include <ctype.h>
@@ -10,13 +12,9 @@
 int getop(char []);
 void push(double);
 double pop(void);
-int getch(void);
-void ungetch(int);
 
 int sp = 0;         /* next free stack position */
 double val[MAXVAL]; /* value stack */
-char buf[BUFSIZE];  /* buffer for ungetch */
-int bufp = 0;       /* next free position in buf */
 
 /* reverse Polish calculator */
 main()
@@ -90,37 +88,25 @@ double pop(void)
 /* getop:  get next operator or numeric operand */
 int getop(char s[])
 {
-    int i, c;
+    int i;
+    static int c = ' ';
 
-    while ((s[0] = c = getch()) == ' ' || c == '\t')
-        ;
+    while (c == ' ' || c == '\t')
+        s[0] = c = getchar();
     s[1] = '\0';
-    if (!isdigit(c) && c != '.' && c != '+' && c != '-')
-        return c;   /* not a number */
+    if (!isdigit(c) && c != '.' && c != '+' && c != '-') {
+        c = ' ';        /* read next character next time getop is run */
+        return s[0];    /* not a number */
+    }
     i = 0;
     if (isdigit(c) || c == '+' || c == '-') /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
+        while (isdigit(s[++i] = c = getchar()))
             ;
     if (c == '.')   /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
+        while (isdigit(s[++i] = c = getchar()))
             ;
     s[i] = '\0';
-    if (c != EOF)
-        ungetch(c);
     if ((s[0] == '+' || s[0] == '-') && i == 1)
         return s[0];    /* return operator if no digits afterwards */
     return NUMBER;
-}
-
-int getch(void) /* get a (possibly pushed back) character */
-{
-    return (bufp > 0) ? buf[--bufp] : getchar();
-}
-
-void ungetch(int c) /* push character back on input */
-{
-    if (bufp >= BUFSIZE)
-        printf("ungetch: too many characters\n");
-    else
-        buf[bufp++] = c;
 }
