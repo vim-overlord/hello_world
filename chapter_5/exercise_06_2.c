@@ -1,10 +1,17 @@
+/* Exercise 5-6. Rewrite appropriate programs from earlier chapters and
+    exercises with pointers instead of array indexing. Good possibilities
+    include... itoa... reverse... */
 #include <stdio.h>
 #include <string.h>
 
 #define MAXLINE 1000    /* maximum input line length */
+#define swap(t, x, y) \
+    t z = x; \
+    x = y; \
+    y = z;
 
-void itoa(int, char []);
-void reverse(char []);
+void itoa(int, char *);
+void reverse(char *);
 
 main()
 {
@@ -16,30 +23,28 @@ main()
 }
 
 /* itoa:  convert n to characters in s */
-void itoa(int n, char s[])
+void itoa(int n, char *s)
 {
-    int i, sign;
+    int sign;
+    char *p = s;
 
     if ((sign = n) < 0)  /* record sign */
         n = -n;          /* make n positive */
-    i = 0;
     do {       /* generate digits in reverse order */
-        s[i++] = n % 10 + '0';   /* get next digit */
-    } while ((n /= 10) > 0);     /* delete it */
+        *s++ = n % 10 + '0';    /* get next digit */
+    } while ((n /= 10) > 0);    /* delete it */
     if (sign < 0)
-        s[i++] = '-';
-    s[i] = '\0';
-    reverse(s);
+        *s++ = '-';
+    *s = '\0';
+    reverse(p);
 }
 
 /* reverse:  reverse string s in place */
-void reverse(char s[])
+void reverse(char *s)
 {
-    int c, i, j;
+    char *t = s + strlen(s) - 1;
 
-    for (i = 0, j = strlen(s)-1; i < j; i++, j--) {
-        c = s[i];
-        s[i] = s[j];
-        s[j] = c;
+    for (; t - s > 0; ++s, --t) {
+        swap(char, *s, *t);
     }
 }
