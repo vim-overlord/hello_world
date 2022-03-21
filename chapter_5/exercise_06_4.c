@@ -1,3 +1,6 @@
+/* Exercise 5-6. Rewrite appropriate programs from earlier chapters and
+    exercises with pointers instead of array indexing. Good possibilities
+    include... getop (Chapter 4). */
 #include <stdio.h>
 #include <stdlib.h>   /* for atof() */
 #include <ctype.h>
@@ -88,27 +91,28 @@ double pop(void)
 }
 
 /* getop:  get next operator or numeric operand */
-int getop(char s[])
+int getop(char *s)
 {
-    int i, c;
+    int c;
+    char *sp;
 
-    while ((s[0] = c = getch()) == ' ' || c == '\t')
+    while ((*s = c = getch()) == ' ' || c == '\t')
         ;
-    s[1] = '\0';
+    *(s + 1) = '\0';
     if (!isdigit(c) && c != '.' && c != '+' && c != '-')
         return c;   /* not a number */
-    i = 0;
+    sp = s;
     if (isdigit(c) || c == '+' || c == '-') /* collect integer part */
-        while (isdigit(s[++i] = c = getch()))
+        while (isdigit(*++s = c = getch()))
             ;
     if (c == '.')   /* collect fraction part */
-        while (isdigit(s[++i] = c = getch()))
+        while (isdigit(*++s = c = getch()))
             ;
-    s[i] = '\0';
+    *s = '\0';
     if (c != EOF)
         ungetch(c);
-    if ((s[0] == '+' || s[0] == '-') && i == 1)
-        return s[0];    /* return operator if no digits afterwards */
+    if ((*sp == '+' || *sp == '-') && s - sp == 1)
+        return *sp; /* return operator if no digits afterwards */
     return NUMBER;
 }
 
