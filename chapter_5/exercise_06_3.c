@@ -1,8 +1,11 @@
+/* Exercise 5-6. Rewrite appropriate programs from earlier chapters and
+    exercises with pointers instead of array indexing. Good possibilities
+    include... strindex... (Chapter 4). */
 #include <stdio.h>
 #define MAXLINE 1000    /* maximum input line length */
 
 int my_getline(char line[], int max);
-int strindex(char source[], char searchfor[]);
+int strindex(char *source, char *searchfor);
 
 char pattern[] = "ould";    /* pattern to search for */
 
@@ -10,11 +13,11 @@ char pattern[] = "ould";    /* pattern to search for */
 main()
 {
     char line[MAXLINE];
-    int found = 0;
+    int index, found = 0;
 
     while (my_getline(line, MAXLINE) > 0)
-        if (strindex(line, pattern) >= 0) {
-            printf("%s", line);
+        if ((index = strindex(line, pattern)) >= 0) {
+            printf("%s%d\n", line, index);
             found++;
         }
     return found;
@@ -35,15 +38,17 @@ int my_getline(char s[], int lim)
 }
 
 /* strindex:  return index of t in s, -1 if none */
-int strindex(char s[], char t[])
+int strindex(char *s, char *t)
 {
-    int i, j, k;
+    char *p;
+    char *sp = s;
+    char *tp = t;
 
-    for (i = 0; s[i] != '\0'; i++) {
-        for (j=i, k=0; t[k]!='\0' && s[j]==t[k]; j++, k++)
+    for (; *s != '\0'; ++s, t = tp) {
+        for (p = s; *t != '\0' && *p == *t; ++p, ++t)
             ;
-        if (k > 0 && t[k] == '\0')
-            return i;
+        if (*t == '\0')
+            return s - sp;
     }
     return -1;
 }
