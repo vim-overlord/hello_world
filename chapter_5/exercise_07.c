@@ -1,11 +1,15 @@
+/* Exercise 5-7. Rewrite readlines to store lines in an array supplied by main,
+    rather than calling alloc to maintain storage. How much faster is the
+    program? */
 #include <stdio.h>
 #include <string.h>
 
 #define MAXLINES 5000       /* max #lines to be sorted */
+#define BUFSIZE 10000
 
 char *lineptr[MAXLINES];    /* pointers to text lines */
 
-int readlines(char *lineptr[], int nlines);
+int readlines(char *lineptr[], int nlines, char *buf, int bufsize);
 void writelines(char *lineptr[], int nlines);
 
 void qsort(char *lineptr[], int left, int right);
@@ -13,9 +17,10 @@ void qsort(char *lineptr[], int left, int right);
 /* sort input lines */
 main()
 {
-    int nlines;     /* number of input lines read */
+    char buf[BUFSIZE];  /* buffer for inputted characters */
+    int nlines;         /* number of input lines read */
 
-    if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
+    if ((nlines = readlines(lineptr, MAXLINES, buf, BUFSIZE)) >= 0) {
         qsort(lineptr, 0, nlines-1);
         writelines(lineptr, nlines);
         return 0;
@@ -25,24 +30,23 @@ main()
     }
 }
 
-#define MAXLEN 1000    /* max length of any input line */
 int my_getline(char *, int);
-char *alloc(int);
 
 /* readlines:  read input lines */
-int readlines(char *lineptr[], int maxlines)
+int readlines(char *lineptr[], int maxlines, char *buf, int bufsize)
 {
     int len, nlines;
-    char *p, line[MAXLEN];
+    char *p;
 
     nlines = 0;
-    while ((len = my_getline(line, MAXLEN)) > 0)
-        if (nlines >= maxlines || (p = alloc(len)) == NULL)
+    p = buf;
+    while ((len = my_getline(p, bufsize - (p - buf))) > 0)
+        if (nlines >= maxlines)
             return -1;
         else {
-            line[len-1] = '\0'; /* delete newline */
-            strcpy(p, line);
+            p[len-1] = '\0';    /* delete newline */
             lineptr[nlines++] = p;
+            p += len;
         }
     return nlines;
 }
